@@ -1,6 +1,4 @@
-import { applyMiddleware, legacy_createStore, combineReducers } from "redux";
-import { composeWithDevTools } from "redux-devtools-extension";
-import { thunk } from "redux-thunk";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
 
 import { todosReducer } from "./todoList/todos";
 import { notificationReducer } from "./notificationBar/notification";
@@ -10,9 +8,7 @@ const rootReducer = combineReducers({
   todos: todosReducer,
 });
 
-const composedEnhancer = composeWithDevTools(applyMiddleware(thunk));
-
-const store = legacy_createStore(rootReducer, composedEnhancer);
+const store = configureStore({ reducer: rootReducer });
 
 export default store;
 

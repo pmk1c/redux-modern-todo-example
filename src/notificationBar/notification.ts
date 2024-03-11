@@ -1,24 +1,14 @@
-import { UnknownAction } from "@reduxjs/toolkit";
+import { UnknownAction, createAction } from "@reduxjs/toolkit";
 
 import { RootState } from "../store";
 
-type SetNotificationAction =
-  | ReturnType<typeof setNotification>
-  | ReturnType<typeof removeNotification>;
+export const setNotification = createAction<string>(
+  "notification/setNotification",
+);
 
-export const setNotification = (notification: string) => ({
-  type: "notification/setNotification",
-  payload: {
-    notification,
-  },
-});
-
-export const removeNotification = () => ({
-  type: "notification/setNotification",
-  payload: {
-    notification: null,
-  },
-});
+export const removeNotification = createAction(
+  "notification/removeNotification",
+);
 
 const initialState = null as string | null;
 
@@ -26,14 +16,12 @@ export const notificationReducer = (
   state = initialState,
   action: UnknownAction,
 ) => {
-  const { type } = action;
+  if (setNotification.match(action)) {
+    return action.payload;
+  }
 
-  if (type === "notification/setNotification") {
-    const {
-      payload: { notification },
-    } = action as SetNotificationAction;
-
-    return notification;
+  if (removeNotification.match(action)) {
+    return null;
   }
 
   return state;

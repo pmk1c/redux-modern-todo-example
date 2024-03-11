@@ -1,4 +1,9 @@
-import { createSelector, nanoid, UnknownAction } from "@reduxjs/toolkit";
+import {
+  createAction,
+  createSelector,
+  nanoid,
+  UnknownAction,
+} from "@reduxjs/toolkit";
 
 import { Todo } from "./types";
 import { AppDispatch, RootState } from "../store";
@@ -6,23 +11,9 @@ import todosApi from "../todosApi";
 import { setNotification } from "../notificationBar/notification";
 
 // ACTION CREATORS
-type SetTodoAction = ReturnType<typeof setTodo>;
+export const setTodo = createAction<Todo>("todos/setTodo");
 
-export const setTodo = (todo: Todo) => ({
-  type: "todos/setTodo",
-  payload: {
-    todo,
-  },
-});
-
-type DeleteTodoAction = ReturnType<typeof deleteTodo>;
-
-export const deleteTodo = (id: string) => ({
-  type: "todos/deleteTodo",
-  payload: {
-    id,
-  },
-});
+export const deleteTodo = createAction<string>("todos/deleteTodo");
 
 export const createTodo =
   (content: string) => async (dispatch: AppDispatch) => {
@@ -70,26 +61,20 @@ export function todosReducer(
   state = initialState,
   action: UnknownAction,
 ): Record<string, Todo> {
-  const { type } = action;
-
-  if (type === "todos/setTodo") {
-    const {
-      payload: { todo },
-    } = action as SetTodoAction;
+  if (setTodo.match(action)) {
+    const { payload } = action;
 
     return {
       ...state,
-      [todo.id]: todo,
+      [payload.id]: payload,
     };
   }
 
-  if (type === "todos/deleteTodo") {
-    const {
-      payload: { id },
-    } = action as DeleteTodoAction;
+  if (deleteTodo.match(action)) {
+    const { payload } = action;
 
     const newState = { ...state };
-    delete newState[id];
+    delete newState[payload];
     return newState;
   }
 

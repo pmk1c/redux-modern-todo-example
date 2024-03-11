@@ -1,36 +1,50 @@
-import { UnknownAction, createSelector, nanoid } from "@reduxjs/toolkit";
+import {
+  createAction,
+  createSelector,
+  isAnyOf,
+  nanoid,
+  UnknownAction,
+} from "@reduxjs/toolkit";
 
 import { Todo } from "./types";
 import { AppDispatch, RootState } from "../../store/store";
 import todosApi from "../../todosApi";
 
 // ACTION CREATORS
-export const upsertTodo = (todo: Todo) => ({
-  type: "todos/upsertTodo" as const,
+export const upsertTodo = createAction("todos/upsertTodo", (todo: Todo) => ({
   payload: todo,
-});
+}));
 
-export const createTodoSuccess = (todo: Todo) => ({
-  type: "todos/createtodoSuccess" as const,
-  payload: todo,
-});
+export const createTodoSuccess = createAction(
+  "todos/createtodoSuccess",
+  (todo: Todo) => ({
+    payload: todo,
+  }),
+);
 
-export const createTodoError = (id: string) => ({
-  type: "todos/createTodoError" as const,
-  payload: id,
-  meta: { notification: "Failed to create todo. Please try again." },
-});
+export const createTodoError = createAction(
+  "todos/createTodoError",
+  (id: string) => ({
+    payload: id,
+    meta: { notification: "Failed to create todo. Please try again." },
+  }),
+);
 
-export const updateTodoSuccess = (todo: Todo) => ({
-  type: "todos/updateTodoSuccess" as const,
-  payload: todo,
-});
+export const updateTodoSuccess = createAction(
+  "todos/updateTodoSuccess",
+  (todo: Todo) => ({
+    type: "todos/updateTodoSuccess" as const,
+    payload: todo,
+  }),
+);
 
-export const updateTodoError = (todo: Todo) => ({
-  type: "todos/updateTodoError" as const,
-  payload: todo,
-  meta: { notification: "Failed to update todo. Please try again." },
-});
+export const updateTodoError = createAction(
+  "todos/updateTodoError",
+  (todo: Todo) => ({
+    payload: todo,
+    meta: { notification: "Failed to update todo. Please try again." },
+  }),
+);
 
 // THUNK CREATORS
 export const createTodo =
@@ -73,25 +87,25 @@ export const updateTodo =
   };
 
 // REDUCER
-const initialState = {} as Record<string, Todo>;
+const initialState = {} as Record<string, Todo | undefined>;
 
 export const todosReducer = (state = initialState, action: UnknownAction) => {
-  switch (action.type) {
-    case "todos/upsertTodo":
-    case "todos/createTodoSuccess":
-    case "todos/updateTodoSuccess":
-    case "todos/updateTodoError":
-      return {
-        ...state,
-        [(action.payload as Todo).id]: action.payload as Todo,
-      };
-
-    case "todos/createTodoError":
-      return { ...state, [action.payload as string]: undefined };
-
-    default:
-      return state;
+  if (
+    isAnyOf(
+      upsertTodo,
+      createTodoSuccess,
+      updateTodoSuccess,
+      updateTodoError,
+    )(action)
+  ) {
+    return { ...state, [action.payload.id]: action.payload };
   }
+
+  if (createTodoError.match(action)) {
+    return { ...state, [action.payload]: undefined };
+  }
+
+  return state;
 };
 
 // SELECTORS

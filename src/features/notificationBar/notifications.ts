@@ -1,10 +1,10 @@
-import { UnknownAction } from "@reduxjs/toolkit";
+import { createAction, UnknownAction } from "@reduxjs/toolkit";
 
 import { RootState } from "../../store/store";
 
-export const removeNotification = () => ({
-  type: "notification/removeNotification" as const,
-});
+export const removeNotification = createAction(
+  "notification/removeNotification",
+);
 
 const initialState = null as string | null;
 
@@ -21,13 +21,11 @@ export const notificationsReducer = (
   state = initialState,
   action: UnknownAction,
 ) => {
-  switch (action.type) {
-    case "notification/removeNotification":
-      return null;
+  if (removeNotification.match(action)) return null;
 
-    default:
-      return getNotification(action) ? getNotification(action) : state;
-  }
+  if (getNotification(action)) return getNotification(action);
+
+  return state;
 };
 
 export const selectNotification = (state: RootState) => state.notifications;

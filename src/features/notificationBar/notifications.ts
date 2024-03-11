@@ -1,4 +1,4 @@
-import { UnknownAction } from "redux";
+import { UnknownAction } from "@reduxjs/toolkit";
 
 import { RootState } from "../../store/store";
 

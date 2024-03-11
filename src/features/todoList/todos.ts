@@ -1,6 +1,4 @@
-import { UnknownAction } from "redux";
-import { nanoid } from "nanoid";
-import { createSelector } from "reselect";
+import { UnknownAction, createSelector, nanoid } from "@reduxjs/toolkit";
 
 import { Todo } from "./types";
 import { AppDispatch, RootState } from "../../store/store";

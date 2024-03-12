@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 
-import { removeNotification, selectNotification } from "./notifications";
+import { removeNotification, selectNotification } from "./notificationsSlice";
 import { useEffect } from "react";
 
 function NotificationBar() {

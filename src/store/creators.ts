@@ -1,5 +1,9 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { asyncThunkCreator, buildCreateSlice } from "@reduxjs/toolkit";
 
-export const createAppAsyncThunk = createAsyncThunk.withTypes<{
+export type AsyncThunkConfig = {
   rejectedMeta: { notification?: string };
-}>();
+};
+
+export const createAppSlice = buildCreateSlice({
+  creators: { asyncThunk: asyncThunkCreator },
+});

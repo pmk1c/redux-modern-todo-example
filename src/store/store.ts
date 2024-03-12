@@ -1,13 +1,12 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { combineSlices, configureStore } from "@reduxjs/toolkit";
 
-import { todosReducer } from "../features/todoList/todos";
-import { notificationsReducer } from "../features/notificationBar/notifications";
+import todosSlice from "../features/todoList/todosSlice";
+import notificationsSlice from "../features/notificationBar/notificationsSlice";
+
+const reducer = combineSlices(todosSlice, notificationsSlice);
 
 const store = configureStore({
-  reducer: {
-    notifications: notificationsReducer,
-    todos: todosReducer,
-  },
+  reducer,
 });
 
 export default store;

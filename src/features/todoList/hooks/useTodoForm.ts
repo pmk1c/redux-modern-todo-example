@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 
-import { createTodo } from "../todos";
+import { createTodo } from "../todosSlice";
 import { useAppDispatch } from "../../../store/hooks";
 
 function useTodoForm() {

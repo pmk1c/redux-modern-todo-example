@@ -1,5 +1,5 @@
 import { Todo } from "../types";
-import { updateTodo } from "../todos";
+import { updateTodo } from "../todosSlice";
 import { useAppDispatch } from "../../../store/hooks";
 
 interface Props {
@@ -15,7 +15,7 @@ function TodoItem({ todo }: Props) {
         type="checkbox"
         checked={!!todo.completedAt}
         onChange={(e) =>
-          dispatch(updateTodo({ id: todo.id, completed: e.target.checked }))
+          dispatch(updateTodo(todo, { completed: e.target.checked }))
         }
       />
       {todo.content}

@@ -4,7 +4,7 @@ import {
   selectCompletedTodos,
   selectTodos,
   selectUncompletedTodos,
-} from "../todos";
+} from "../todosSlice";
 
 type TabId = (typeof tabsStatic)[number]["id"];
 

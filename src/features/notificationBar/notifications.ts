@@ -1,4 +1,9 @@
-import { createAction, isRejected, UnknownAction } from "@reduxjs/toolkit";
+import {
+  UnknownAction,
+  createAction,
+  createReducer,
+  isRejected,
+} from "@reduxjs/toolkit";
 
 import { RootState } from "../../store/store";
 
@@ -6,25 +11,31 @@ export const removeNotification = createAction(
   "notification/removeNotification",
 );
 
-const initialState = null as string | null;
-
-function getNotification(action: UnknownAction) {
-  return isRejected(action) &&
-    "notification" in action.meta &&
-    typeof action.meta.notification === "string"
-    ? action.meta.notification
-    : null;
+interface NotificationAction extends UnknownAction {
+  meta: {
+    notification: string;
+  };
 }
 
-export const notificationsReducer = (
-  state = initialState,
-  action: UnknownAction,
-) => {
-  if (removeNotification.match(action)) return null;
+function hasNotification(action: UnknownAction): action is NotificationAction {
+  return (
+    isRejected(action) &&
+    "notification" in action.meta &&
+    typeof action.meta.notification === "string"
+  );
+}
 
-  if (getNotification(action)) return getNotification(action);
+const initialState = { notification: null as string | null };
 
-  return state;
-};
+export const notificationsReducer = createReducer(initialState, (builder) => {
+  builder
+    .addCase(removeNotification, (state) => {
+      state.notification = null;
+    })
+    .addMatcher(hasNotification, (state, action) => {
+      state.notification = action.meta.notification;
+    });
+});
 
-export const selectNotification = (state: RootState) => state.notifications;
+export const selectNotification = (state: RootState) =>
+  state.notifications.notification;

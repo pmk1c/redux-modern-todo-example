@@ -1,11 +1,11 @@
 import {
   createAction,
   createEntityAdapter,
+  createReducer,
   createSelector,
   isAnyOf,
   isRejectedWithValue,
   nanoid,
-  UnknownAction,
 } from "@reduxjs/toolkit";
 
 import { Todo } from "./types";
@@ -76,21 +76,25 @@ export const updateTodo = createAppAsyncThunk<
 const todosAdapter = createEntityAdapter<Todo>();
 const initialState = todosAdapter.getInitialState();
 
-export const todosReducer = (state = initialState, action: UnknownAction) => {
-  if (
-    (isAnyOf(upsertTodo, createTodo.fulfilled, updateTodo.fulfilled)(action) ||
-      isRejectedWithValue(updateTodo)(action)) &&
-    action.payload
-  ) {
-    return todosAdapter.upsertOne(state, action.payload);
-  }
-
-  if (isRejectedWithValue(createTodo)(action) && action.payload) {
-    return todosAdapter.removeOne(state, action.payload.id);
-  }
-
-  return state;
-};
+export const todosReducer = createReducer(initialState, (builder) => {
+  builder
+    .addMatcher(
+      isAnyOf(
+        upsertTodo,
+        createTodo.fulfilled,
+        updateTodo.fulfilled,
+        isRejectedWithValue(updateTodo),
+      ),
+      (state, action) => {
+        if (!action.payload) return;
+        return todosAdapter.upsertOne(state, action.payload);
+      },
+    )
+    .addMatcher(isRejectedWithValue(createTodo), (state, action) => {
+      if (!action.payload) return;
+      return todosAdapter.removeOne(state, action.payload.id);
+    });
+});
 
 // SELECTORS
 const todosAdapterSelectors = todosAdapter.getSelectors(

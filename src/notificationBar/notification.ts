@@ -1,10 +1,6 @@
-import { UnknownAction, createAction } from "@reduxjs/toolkit";
+import { UnknownAction, createAction, isRejected } from "@reduxjs/toolkit";
 
 import { RootState } from "../store";
-
-export const setNotification = createAction<string>(
-  "notification/setNotification",
-);
 
 export const removeNotification = createAction(
   "notification/removeNotification",
@@ -16,8 +12,8 @@ export const notificationReducer = (
   state = initialState,
   action: UnknownAction,
 ) => {
-  if (setNotification.match(action)) {
-    return action.payload;
+  if (isRejected(action) && "notification" in action.meta) {
+    return action.meta?.notification;
   }
 
   if (removeNotification.match(action)) {

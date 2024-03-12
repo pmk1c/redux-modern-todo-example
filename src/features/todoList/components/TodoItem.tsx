@@ -15,7 +15,7 @@ function TodoItem({ todo }: Props) {
         type="checkbox"
         checked={!!todo.completedAt}
         onChange={(e) =>
-          dispatch(updateTodo(todo.id, { completed: e.target.checked }))
+          dispatch(updateTodo({ id: todo.id, completed: e.target.checked }))
         }
       />
       {todo.content}

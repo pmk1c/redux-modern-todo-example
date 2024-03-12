@@ -1,4 +1,4 @@
-import { createAction, UnknownAction } from "@reduxjs/toolkit";
+import { createAction, isRejected, UnknownAction } from "@reduxjs/toolkit";
 
 import { RootState } from "../../store/store";
 
@@ -9,8 +9,7 @@ export const removeNotification = createAction(
 const initialState = null as string | null;
 
 function getNotification(action: UnknownAction) {
-  return typeof action.meta === "object" &&
-    !!action.meta &&
+  return isRejected(action) &&
     "notification" in action.meta &&
     typeof action.meta.notification === "string"
     ? action.meta.notification

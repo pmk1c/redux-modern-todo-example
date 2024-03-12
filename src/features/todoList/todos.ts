@@ -2,107 +2,90 @@ import {
   createAction,
   createSelector,
   isAnyOf,
+  isRejectedWithValue,
   nanoid,
   UnknownAction,
 } from "@reduxjs/toolkit";
 
 import { Todo } from "./types";
-import { AppDispatch, RootState } from "../../store/store";
+import { RootState } from "../../store/store";
 import todosApi from "../../todosApi";
+import { createAppAsyncThunk } from "../../store/creators";
 
 // ACTION CREATORS
 export const upsertTodo = createAction("todos/upsertTodo", (todo: Todo) => ({
   payload: todo,
 }));
 
-export const createTodoSuccess = createAction(
-  "todos/createtodoSuccess",
-  (todo: Todo) => ({
-    payload: todo,
-  }),
-);
-
-export const createTodoError = createAction(
-  "todos/createTodoError",
-  (id: string) => ({
-    payload: id,
-    meta: { notification: "Failed to create todo. Please try again." },
-  }),
-);
-
-export const updateTodoSuccess = createAction(
-  "todos/updateTodoSuccess",
-  (todo: Todo) => ({
-    type: "todos/updateTodoSuccess" as const,
-    payload: todo,
-  }),
-);
-
-export const updateTodoError = createAction(
-  "todos/updateTodoError",
-  (todo: Todo) => ({
-    payload: todo,
-    meta: { notification: "Failed to update todo. Please try again." },
-  }),
-);
-
 // THUNK CREATORS
-export const createTodo =
-  (content: string) => async (dispatch: AppDispatch) => {
-    const todo = {
-      id: nanoid(),
-      content,
-      completedAt: null,
-    };
-
-    try {
-      dispatch(upsertTodo(todo));
-
-      const createdTodo = await todosApi.create(todo);
-
-      dispatch(createTodoSuccess(createdTodo));
-    } catch (error) {
-      dispatch(createTodoError(todo.id));
-    }
+export const createTodo = createAppAsyncThunk<
+  Todo,
+  string,
+  {
+    rejectValue: Todo;
+  }
+>("todos/createTodo", async (content: string, thunkApi) => {
+  const todo = {
+    id: nanoid(),
+    content,
+    completedAt: null,
   };
+  thunkApi.dispatch(upsertTodo(todo));
 
-export const updateTodo =
-  (id: string, { completed }: { completed: boolean }) =>
-  async (dispatch: AppDispatch, getState: () => RootState) => {
-    const todo = selectTodo(getState(), id);
-    if (!todo) throw new Error(`Todo with id ${id} not found.`);
+  try {
+    const createdTodo = await todosApi.create(todo);
+    return createdTodo;
+  } catch {
+    return thunkApi.rejectWithValue(todo, {
+      notification: "Failed to create todo. Please try again.",
+    });
+  }
+});
 
-    try {
-      const changedTodo = {
-        ...todo,
-        completedAt: completed ? new Date().toISOString() : null,
-      };
-      dispatch(upsertTodo(changedTodo));
+interface UpdateTodo {
+  id: string;
+  completed: boolean;
+}
 
-      const updatedTodo = await todosApi.update(changedTodo);
-      dispatch(updateTodoSuccess(updatedTodo));
-    } catch (error) {
-      dispatch(updateTodoError(todo));
-    }
+export const updateTodo = createAppAsyncThunk<
+  Todo,
+  UpdateTodo,
+  {
+    rejectValue: Todo;
+  }
+>("todos/updateTodo", async ({ id, completed }: UpdateTodo, thunkApi) => {
+  const todo = selectTodo(thunkApi.getState() as RootState, id) as Todo; // break type dependency cycle by providing a type for todo;
+  const changedTodo = {
+    ...todo,
+    completedAt: completed ? new Date().toISOString() : null,
   };
+  thunkApi.dispatch(upsertTodo(changedTodo));
+
+  try {
+    const updatedTodo = await todosApi.update(changedTodo);
+    return updatedTodo;
+  } catch {
+    return thunkApi.rejectWithValue(todo, {
+      notification: "Failed to update todo. Please try again.",
+    });
+  }
+});
 
 // REDUCER
 const initialState = {} as Record<string, Todo | undefined>;
 
 export const todosReducer = (state = initialState, action: UnknownAction) => {
   if (
-    isAnyOf(
-      upsertTodo,
-      createTodoSuccess,
-      updateTodoSuccess,
-      updateTodoError,
-    )(action)
+    isAnyOf(upsertTodo, createTodo.fulfilled, updateTodo.fulfilled)(action) ||
+    (isRejectedWithValue(updateTodo)(action) && action.payload)
   ) {
+    if (!action.payload) return state;
+
     return { ...state, [action.payload.id]: action.payload };
   }
 
-  if (createTodoError.match(action)) {
-    return { ...state, [action.payload]: undefined };
+  if (isRejectedWithValue(createTodo)(action) && action.payload) {
+    return { ...state, [action.payload.id]: undefined };
   }
 
   return state;

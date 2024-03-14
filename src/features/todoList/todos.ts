@@ -1,5 +1,6 @@
 import {
   createAction,
+  createEntityAdapter,
   createSelector,
   isAnyOf,
   isRejectedWithValue,
@@ -72,32 +73,32 @@ export const updateTodo = createAppAsyncThunk<
 });
 
 // REDUCER
-const initialState = {} as Record<string, Todo | undefined>;
+const todosAdapter = createEntityAdapter<Todo>();
+const initialState = todosAdapter.getInitialState();
 
 export const todosReducer = (state = initialState, action: UnknownAction) => {
   if (
-    isAnyOf(upsertTodo, createTodo.fulfilled, updateTodo.fulfilled)(action) ||
-    (isRejectedWithValue(updateTodo)(action) && action.payload)
+    (isAnyOf(upsertTodo, createTodo.fulfilled, updateTodo.fulfilled)(action) ||
+      isRejectedWithValue(updateTodo)(action)) &&
+    action.payload
   ) {
-    if (!action.payload) return state;
-
-    return { ...state, [action.payload.id]: action.payload };
+    return todosAdapter.upsertOne(state, action.payload);
   }
 
   if (isRejectedWithValue(createTodo)(action) && action.payload) {
-    return { ...state, [action.payload.id]: undefined };
+    return todosAdapter.removeOne(state, action.payload.id);
   }
 
   return state;
 };
 
 // SELECTORS
-const selectTodo = (state: RootState, id: string) => state.todos[id];
-
-export const selectTodos = createSelector(
+const todosAdapterSelectors = todosAdapter.getSelectors(
   (state: RootState) => state.todos,
-  (todos) => Object.values(todos).filter(Boolean) as Todo[],
 );
+
+export const { selectById: selectTodo, selectAll: selectTodos } =
+  todosAdapterSelectors;
 
 export const selectCompletedTodos = createSelector(selectTodos, (todos) =>
   todos.filter((todo) => todo.completedAt),
